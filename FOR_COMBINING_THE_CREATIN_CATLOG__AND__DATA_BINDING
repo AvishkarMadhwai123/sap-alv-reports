@@ -1,0 +1,145 @@
+*&---------------------------------------------------------------------*
+*& Report ZALVQ
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZALV_COMB_FIELDCAT_AND_DATA_BI.
+DATA : T_VBELN TYPE VBELN_VA.
+SELECT-OPTIONS SO_VBELN FOR T_VBELN.
+
+TYPES : BEGIN OF STR_VBAK,
+  VBELN TYPE VBELN_VA,
+ERDAT TYPE ERDAT,
+ERZET TYPE ERZET,
+ERNAM TYPE ERNAM,
+VBTYP TYPE VBTYPL,
+  END OF STR_VBAK.
+
+    TYPES : BEGIN OF STR_VBAP,
+    VBELN TYPE VBELN_VA,
+    POSNR TYPE POSNR_VA,
+    MATNR TYPE MATNR,
+    END OF STR_VBAP.
+
+  DATA: IT_VBAK TYPE TABLE OF STR_VBAK,
+        WA_VBAK TYPE STR_VBAK.
+
+    DATA: IT_VBAP TYPE TABLE OF STR_VBAP,
+          WA_VBAP TYPE STR_VBAP.
+
+    DATA LC_FIELDCAT TYPE SLIS_T_FIELDCAT_ALV.
+
+    DATA: WA_FIELDCAT TYPE slis_fieldcat_alv.
+
+    DATA : IT_FINAL TYPE TABLE OF ZSTR1_FOR_ALV1.
+    DATA: WA_FINAL TYPE ZSTR1_FOR_ALV1.
+
+
+   SELECT VBELN ERDAT ERZET ERNAM VBTYP
+     INTO TABLE IT_VBAK
+     FROM VBAK WHERE
+     VBELN IN SO_VBELN.
+
+     IF IT_VBAK IS NOT INITIAL.
+       SELECT VBELN POSNR MATNR
+         FROM VBAP INTO TABLE IT_VBAP
+         FOR ALL ENTRIES IN IT_VBAK
+         WHERE VBELN = IT_VBAK-VBELN.
+       ENDIF.
+
+       LOOP AT IT_VBAK INTO WA_VBAK.
+         LOOP AT IT_VBAP INTO WA_VBAP WHERE VBELN = WA_VBAK-VBELN.
+           WA_FINAL-VBELN = WA_VBAK-VBELN.
+           WA_FINAL-ERDAT = WA_VBAK-ERDAT.
+           WA_FINAL-ERZET = WA_VBAK-ERZET.
+           WA_FINAL-ERNAM = WA_VBAK-ERNAM.
+           WA_FINAL-VBTYP = WA_VBAK-VBTYP.
+           WA_FINAL-POSNR = WA_VBAP-POSNR.
+           WA_FINAL-MATNR = WA_VBAP-MATNR.
+           APPEND WA_FINAL TO IT_FINAL.
+           CLEAR WA_FINAL.
+           ENDLOOP.
+
+         ENDLOOP.
+
+*              CALL FUNCTION 'REUSE_ALV_FIELDCATALOG_MERGE'
+*               EXPORTING
+**                 I_PROGRAM_NAME               =
+**                 I_INTERNAL_TABNAME           =
+*                 I_STRUCTURE_NAME             = 'ZSTR1_FOR_ALV1'
+**                 I_CLIENT_NEVER_DISPLAY       = 'X'
+**                 I_INCLNAME                   =
+**                 I_BYPASSING_BUFFER           =
+**                 I_BUFFER_ACTIVE              =
+*                CHANGING
+*                  ct_fieldcat                  = LC_FIELDCAT
+**               EXCEPTIONS
+**                 INCONSISTENT_INTERFACE       = 1
+**                 PROGRAM_ERROR                = 2
+**                 OTHERS                       = 3
+*                        .
+*              IF sy-subrc <> 0.
+** Implement suitable error handling here
+*              ENDIF.
+*
+*             LOOP AT LC_FIELDCAT INTO WA_FIELDCAT.
+*               IF WA_FIELDCAT-FIELDNAME = 'VBELN'.
+*                WA_FIELDCAT-SELTEXT_L = 'SALES DOC........'.
+*                MODIFY LC_FIELDCAT FROM WA_FIELDCAT TRANSPORTING SELTEXT_L.
+*                 ENDIF.
+*
+*                 IF WA_FIELDCAT-FIELDNAME = 'ERZET'.
+*                   WA_FIELDCAT-COL_POS = 1.
+*                    MODIFY LC_FIELDCAT FROM WA_FIELDCAT TRANSPORTING COL_POS.
+*                   ENDIF.
+*                   IF WA_FIELDCAT-FIELDNAME = 'VBELN'.
+*                   WA_FIELDCAT-COL_POS = 2.
+*                    MODIFY LC_FIELDCAT FROM WA_FIELDCAT TRANSPORTING COL_POS.
+*                   ENDIF.
+*
+*                 ENDLOOP.
+
+              CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
+               EXPORTING
+*                 I_INTERFACE_CHECK              = ' '
+*                 I_BYPASSING_BUFFER             =
+*                 I_BUFFER_ACTIVE                = ' '
+*                 I_CALLBACK_PROGRAM             = ' '
+*                 I_CALLBACK_PF_STATUS_SET       = ' '
+*                 I_CALLBACK_USER_COMMAND        = ' '
+                  I_STRUCTURE_NAME               = 'ZSTR1_FOR_ALV1'
+*                 IS_LAYOUT                      =
+*                  IT_FIELDCAT                    = LC_FIELDCAT
+*                 IT_EXCLUDING                   =
+*                 IT_SPECIAL_GROUPS              =
+*                 IT_SORT                        =
+*                 IT_FILTER                      =
+*                 IS_SEL_HIDE                    =
+*                 I_DEFAULT                      = 'X'
+*                 I_SAVE                         = ' '
+*                 IS_VARIANT                     =
+*                 IT_EVENTS                      =
+*                 IT_EVENT_EXIT                  =
+*                 IS_PRINT                       =
+*                 IS_REPREP_ID                   =
+*                 I_SCREEN_START_COLUMN          = 0
+*                 I_SCREEN_START_LINE            = 0
+*                 I_SCREEN_END_COLUMN            = 0
+*                 I_SCREEN_END_LINE              = 0
+*                 IR_SALV_LIST_ADAPTER           =
+*                 IT_EXCEPT_QINFO                =
+*                 I_SUPPRESS_EMPTY_DATA          = ABAP_FALSE
+*                 IO_SALV_ADAPTER                =
+*                 O_COMMON_HUB                   =
+*               IMPORTING
+*                 E_EXIT_CAUSED_BY_CALLER        =
+*                 ES_EXIT_CAUSED_BY_USER         =
+                TABLES
+                  t_outtab                       = IT_FINAL
+*               EXCEPTIONS
+*                 PROGRAM_ERROR                  = 1
+*                 OTHERS                         = 2
+                        .
+              IF sy-subrc <> 0.
+* Implement suitable error handling here
+              ENDIF.
