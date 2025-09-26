@@ -1,0 +1,157 @@
+
+*&---------------------------------------------------------------------*
+*& REPORT ZALV_HIRARICHLE
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZALV_HIRARICHLE.
+
+TYPES : BEGIN OF STR_VBAK,
+          VBELN TYPE VBELN_VA,
+          ERDAT TYPE ERDAT,
+          ERZET TYPE ERZET,
+          ERNAM TYPE ERNAM,
+          VBTYP TYPE VBTYPL,
+        END OF STR_VBAK.
+
+DATA: IT_VBAK TYPE TABLE OF STR_VBAK,
+      WA_VBAK TYPE STR_VBAK.
+
+TYPES : BEGIN OF STR_VBAP,
+          VBELN TYPE VBELN_VA,
+          POSNR TYPE POSNR_VA,
+          MATNR TYPE MATNR,
+        END OF STR_VBAP.
+
+DATA : IT_VBAP TYPE TABLE OF STR_VBAP.
+DATA : WA_VBAP TYPE STR_VBAP.
+
+DATA: IT_FIELDCAT TYPE SLIS_T_FIELDCAT_ALV.
+DATA: WA_FIELDCAT TYPE SLIS_FIELDCAT_ALV.
+
+DATA: LV_VBELN TYPE VBELN_VA.
+SELECT-OPTIONS : SO_VBELN FOR LV_VBELN.
+DATA is_keyinfo TYPE SLIS_KEYINFO_ALV.
+
+SELECT VBELN ERDAT ERZET ERNAM VBTYP
+  FROM VBAK
+  INTO TABLE IT_VBAK
+  WHERE VBELN IN SO_VBELN.
+
+IF IT_VBAK IS NOT INITIAL.
+  SELECT VBELN POSNR MATNR
+    FROM VBAP
+    INTO TABLE IT_VBAP
+    FOR ALL ENTRIES IN IT_VBAK
+    WHERE VBELN = IT_VBAK-VBELN.
+ENDIF.
+
+WA_FIELDCAT-COL_POS = '1'.
+WA_FIELDCAT-FIELDNAME = 'VBELN'.
+WA_FIELDCAT-TABNAME = 'IT_VBAK'.
+WA_FIELDCAT-SELTEXT_L = 'SALES DOCUMENT NO.........'.
+APPEND WA_FIELDCAT TO IT_FIELDCAT.
+CLEAR WA_FIELDCAT.
+
+WA_FIELDCAT-COL_POS = '2'.
+WA_FIELDCAT-FIELDNAME = 'ERDAT'.
+WA_FIELDCAT-TABNAME = 'IT_VBAK'.
+WA_FIELDCAT-SELTEXT_L = 'CREATION DATE '.
+APPEND WA_FIELDCAT TO IT_FIELDCAT.
+CLEAR WA_FIELDCAT.
+
+WA_FIELDCAT-COL_POS = '3'.
+WA_FIELDCAT-FIELDNAME = 'ERZET'.
+WA_FIELDCAT-TABNAME = 'IT_VBAK'.
+WA_FIELDCAT-SELTEXT_L = 'CREATION TIME '.
+APPEND WA_FIELDCAT TO IT_FIELDCAT.
+CLEAR WA_FIELDCAT.
+
+WA_FIELDCAT-COL_POS = '4'.
+WA_FIELDCAT-FIELDNAME = 'ERNAM'.
+WA_FIELDCAT-TABNAME = 'IT_VBAK'.
+WA_FIELDCAT-SELTEXT_L = 'USER '.
+APPEND WA_FIELDCAT TO IT_FIELDCAT.
+CLEAR WA_FIELDCAT.
+
+
+WA_FIELDCAT-COL_POS = '5'.
+WA_FIELDCAT-FIELDNAME = 'VBTYP'.
+WA_FIELDCAT-TABNAME = 'IT_VBAK'.
+WA_FIELDCAT-SELTEXT_L = 'CATAGEORY '.
+APPEND WA_FIELDCAT TO IT_FIELDCAT.
+CLEAR WA_FIELDCAT.
+
+WA_FIELDCAT-COL_POS = '1'.
+WA_FIELDCAT-FIELDNAME = 'VBELN'.
+WA_FIELDCAT-TABNAME = 'IT_VBAP'.
+WA_FIELDCAT-SELTEXT_L = 'SALES DOC NO'.
+CLEAR WA_FIELDCAT.
+
+WA_FIELDCAT-COL_POS = '2'.
+WA_FIELDCAT-FIELDNAME = 'POSNR'.
+WA_FIELDCAT-TABNAME = 'IT_VBAP'.
+WA_FIELDCAT-SELTEXT_L = 'ITEM NO'.
+APPEND WA_FIELDCAT TO IT_FIELDCAT.
+CLEAR WA_FIELDCAT.
+
+WA_FIELDCAT-COL_POS = '3'.
+WA_FIELDCAT-FIELDNAME = 'MATNR'.
+WA_FIELDCAT-TABNAME = 'IT_VBAP'.
+WA_FIELDCAT-SELTEXT_L = 'MATERIAL NO'.
+APPEND WA_FIELDCAT TO IT_FIELDCAT.
+CLEAR WA_FIELDCAT.
+
+is_keyinfo-HEADER01 = 'VBELN'.
+is_keyinfo-ITEM01 = 'VBELN'.
+
+                  CALL FUNCTION 'REUSE_ALV_HIERSEQ_LIST_DISPLAY'
+                    EXPORTING
+*                     I_INTERFACE_CHECK              = ' '
+*                     I_CALLBACK_PROGRAM             =
+*                     I_CALLBACK_PF_STATUS_SET       = ' '
+*                     I_CALLBACK_USER_COMMAND        = ' '
+*                     IS_LAYOUT                      =
+                     IT_FIELDCAT                    = IT_FIELDCAT
+*                     IT_EXCLUDING                   =
+*                     IT_SPECIAL_GROUPS              =
+*                     IT_SORT                        =
+*                     IT_FILTER                      =
+*                     IS_SEL_HIDE                    =
+*                     I_SCREEN_START_COLUMN          = 0
+*                     I_SCREEN_START_LINE            = 0
+*                     I_SCREEN_END_COLUMN            = 0
+*                     I_SCREEN_END_LINE              = 0
+*                     I_DEFAULT                      = 'X'
+*                     I_SAVE                         = ' '
+*                     IS_VARIANT                     =
+*                     IT_EVENTS                      =
+*                     IT_EVENT_EXIT                  =
+                      i_tabname_header               = 'IT_VBAK'
+                      i_tabname_item                 = 'IT_VBAP'
+*                     I_STRUCTURE_NAME_HEADER        =
+*                     I_STRUCTURE_NAME_ITEM          =
+                      is_keyinfo                     = is_keyinfo
+*                     IS_PRINT                       =
+*                     IS_REPREP_ID                   =
+*                     IS_HIERSEQ_SETTINGS            =
+*                     I_BYPASSING_BUFFER             =
+*                     I_BUFFER_ACTIVE                =
+*                     IR_SALV_HIERSEQ_ADAPTER        =
+*                     IT_EXCEPT_QINFO                =
+*                     I_SUPPRESS_EMPTY_DATA          = ABAP_FALSE
+*                     I_LIST_DISPLAY_ONLY            = ABAP_FALSE
+*                     O_COMMON_HUB                   =
+*                   IMPORTING
+*                     E_EXIT_CAUSED_BY_CALLER        =
+*                     ES_EXIT_CAUSED_BY_USER         =
+                    TABLES
+                      t_outtab_header                = IT_VBAK
+                      t_outtab_item                  = IT_VBAP
+*                   EXCEPTIONS
+*                     PROGRAM_ERROR                  = 1
+*                     OTHERS                         = 2
+                            .
+                  IF sy-subrc <> 0.
+* Implement suitable error handling here
+                  ENDIF.
