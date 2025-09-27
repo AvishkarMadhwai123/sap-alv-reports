@@ -1,0 +1,170 @@
+
+REPORT Z_BLOCK_AVL.
+
+DATA: LV_VBELN TYPE VBELN_VA.
+SELECT-OPTIONS SO_VBELN FOR LV_VBELN.
+
+TYPES : BEGIN OF STR_VBAK,
+          VBELN TYPE VBELN_VA,
+          ERDAT TYPE ERDAT,
+          ERZET TYPE ERZET,
+          ERNAM TYPE ERNAM,
+          VBTYP TYPE VBTYPL,
+        END OF STR_VBAK.
+
+DATA: IT_VBAK TYPE TABLE OF STR_VBAK,
+      WA_VBAK TYPE STR_VBAK.
+
+DATA: IT_FIELDCAT_VBAK TYPE  SLIS_T_FIELDCAT_ALV.
+DATA: IT_FIELDCAT_VBAP TYPE SLIS_T_FIELDCAT_ALV.
+DATA: WA_IT_VBAK TYPE SLIS_FIELDCAT_ALV.
+DATA: WA_IT_VBAP TYPE SLIS_FIELDCAT_ALV.
+
+TYPES : BEGIN OF STR_VBAP,
+          VBELN TYPE VBELN_VA,
+          POSNR TYPE POSNR_VA,
+          MATNR TYPE MATNR,
+        END OF STR_VBAP.
+
+DATA : IT_VBAP TYPE TABLE OF STR_VBAP.
+DATA : WA_VBAP TYPE STR_VBAP.
+DATA: LWA_LAYOUT TYPE SLIS_LAYOUT_ALV.
+DATA: it_events TYPE SLIS_T_EVENT.
+DATA: LWA_LAYOUT_VBAP TYPE SLIS_LAYOUT_ALV.
+DATA: it_events_VBAP TYPE SLIS_T_EVENT.
+
+SELECT VBELN ERDAT ERZET ERNAM VBTYP
+  FROM VBAK
+  INTO TABLE IT_VBAK
+  WHERE VBELN IN SO_VBELN.
+
+IF IT_VBAK IS NOT INITIAL.
+  SELECT VBELN POSNR MATNR
+    FROM VBAP
+    INTO TABLE IT_VBAP
+    FOR ALL ENTRIES IN IT_VBAK
+    WHERE VBELN = IT_VBAK-VBELN.
+ENDIF.
+WA_IT_VBAK-COL_POS = 1.
+WA_IT_VBAK-FIELDNAME = 'VBELN'.
+WA_IT_VBAK-TABNAME = 'IT_VBAK'.
+WA_IT_VBAK-SELTEXT_L = 'SALES DOCUMENT NO'.
+APPEND WA_IT_VBAK TO IT_FIELDCAT_VBAK.
+CLEAR WA_IT_VBAK.
+
+WA_IT_VBAK-COL_POS = 2.
+WA_IT_VBAK-FIELDNAME = 'ERDAT'.
+WA_IT_VBAK-TABNAME = 'IT_VBAK'.
+WA_IT_VBAK-SELTEXT_L = 'CREATION DATE'.
+APPEND WA_IT_VBAK TO IT_FIELDCAT_VBAK.
+CLEAR WA_IT_VBAK.
+
+WA_IT_VBAK-COL_POS = 3.
+WA_IT_VBAK-FIELDNAME = 'ERZET'.
+WA_IT_VBAK-TABNAME = 'IT_VBAK'.
+WA_IT_VBAK-SELTEXT_L = 'CREATION TIME'.
+APPEND WA_IT_VBAK TO IT_FIELDCAT_VBAK.
+CLEAR WA_IT_VBAK.
+
+WA_IT_VBAK-COL_POS = 4.
+WA_IT_VBAK-FIELDNAME = 'ERNAM'.
+WA_IT_VBAK-TABNAME = 'IT_VBAK'.
+WA_IT_VBAK-SELTEXT_L = 'USER'.
+APPEND WA_IT_VBAK TO IT_FIELDCAT_VBAK.
+CLEAR WA_IT_VBAK.
+
+WA_IT_VBAK-COL_POS = 5.
+WA_IT_VBAK-FIELDNAME = 'VBTYP'.
+WA_IT_VBAK-TABNAME = 'IT_VBAK'.
+WA_IT_VBAK-SELTEXT_L = 'CATEGORY'.
+APPEND WA_IT_VBAK TO IT_FIELDCAT_VBAK.
+CLEAR WA_IT_VBAK.
+
+" Child table
+WA_IT_VBAP-COL_POS = 1.
+WA_IT_VBAP-FIELDNAME = 'VBELN'.
+WA_IT_VBAP-TABNAME = 'IT_VBAP'.
+WA_IT_VBAP-SELTEXT_L = 'SALES DOC NO'.
+APPEND WA_IT_VBAP TO IT_FIELDCAT_VBAP.
+CLEAR WA_IT_VBAP.
+
+WA_IT_VBAP-COL_POS = 2.
+WA_IT_VBAP-FIELDNAME = 'POSNR'.
+WA_IT_VBAP-TABNAME = 'IT_VBAP'.
+WA_IT_VBAP-SELTEXT_L = 'ITEM NO'.
+APPEND WA_IT_VBAP TO IT_FIELDCAT_VBAP.
+CLEAR WA_IT_VBAP.
+
+WA_IT_VBAP-COL_POS = 3.
+WA_IT_VBAP-FIELDNAME = 'MATNR'.
+WA_IT_VBAP-TABNAME = 'IT_VBAP'.
+WA_IT_VBAP-SELTEXT_L = 'MATERIAL NO'.
+APPEND WA_IT_VBAP TO IT_FIELDCAT_VBAP.
+CLEAR WA_IT_VBAP.
+
+
+      CALL FUNCTION 'REUSE_ALV_BLOCK_LIST_INIT'
+       EXPORTING
+     i_callback_program      = SY-REPID.
+*        I_CALLBACK_PF_STATUS_SET       = ' '
+*                                                            I_CALLBACK_USER_COMMAND        = ' '
+*                                                            IT_EXCLUDING                   =
+
+CALL FUNCTION 'REUSE_ALV_BLOCK_LIST_APPEND'
+  EXPORTING
+    is_layout                        = LWA_LAYOUT
+    it_fieldcat                      = IT_FIELDCAT_VBAK
+    i_tabname                        = 'IT_VBAK'
+    it_events                        = it_events
+*   IT_SORT                          =
+*   I_TEXT                           = ' '
+  TABLES
+    t_outtab                         = IT_VBAK
+ EXCEPTIONS
+   PROGRAM_ERROR                    = 1
+   MAXIMUM_OF_APPENDS_REACHED       = 2
+   OTHERS                           = 3
+          .
+IF sy-subrc <> 0.
+* Implement suitable error handling here
+ENDIF.
+
+CALL FUNCTION 'REUSE_ALV_BLOCK_LIST_APPEND'
+  EXPORTING
+    is_layout                        = LWA_LAYOUT_VBAP
+    it_fieldcat                      = IT_FIELDCAT_VBAP
+    i_tabname                        = 'IT_VBAP'
+    it_events                        = it_events_VBAP
+*   IT_SORT                          =
+*   I_TEXT                           = ' '
+  TABLES
+    t_outtab                         = IT_VBAP
+ EXCEPTIONS
+   PROGRAM_ERROR                    = 1
+   MAXIMUM_OF_APPENDS_REACHED       = 2
+   OTHERS                           = 3
+          .
+IF sy-subrc <> 0.
+* Implement suitable error handling here
+ENDIF.
+
+CALL FUNCTION 'REUSE_ALV_BLOCK_LIST_DISPLAY'
+* EXPORTING
+*   I_INTERFACE_CHECK             = ' '
+*   IS_PRINT                      =
+*   I_SCREEN_START_COLUMN         = 0
+*   I_SCREEN_START_LINE           = 0
+*   I_SCREEN_END_COLUMN           = 0
+*   I_SCREEN_END_LINE             = 0
+* IMPORTING
+*   E_EXIT_CAUSED_BY_CALLER       =
+*   ES_EXIT_CAUSED_BY_USER        =
+ EXCEPTIONS
+   PROGRAM_ERROR                 = 1
+   OTHERS                        = 2
+          .
+IF sy-subrc <> 0.
+* Implement suitable error handling here
+ENDIF.
+
+                                                                   .
